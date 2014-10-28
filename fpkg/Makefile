@@ -26,10 +26,13 @@ define Package/$(PKG_NAME)/install
 	$(INSTALL_DIR) $(1)/etc/config
 	$(INSTALL_DIR) $(1)/opt/app/
 	$(INSTALL_DIR) $(1)/opt/app/defalut/icon/
+	$(INSTALL_DIR) $(1)/usr/local
+	$(INSTALL_DIR) $(1)/etc/config
 	cp ./res/logo.png $(1)/opt/app/defalut/icon/large.png
 	cp ./res/logo.png $(1)/opt/app/defalut/icon/small.png
 	$(INSTALL_DIR) $(1)/www/opt/
 	cp ./app $(1)/www/opt/app -a
+	cp ./localshell $(1)/usr/local/ -rf
 	$(INSTALL_BIN) ./fpkg $(1)/usr/bin/fpkg
 	$(INSTALL_BIN) ./config/fpkg $(1)/etc/config/fpkg
 endef
