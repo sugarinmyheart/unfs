@@ -15,6 +15,7 @@ include $(INCLUDE_DIR)/package.mk
 define Package/usb_automount
   SECTION:=firefly-extra
   CATEGORY:=Firefly-Extra
+  DEPENDS:=+blkid +losetup +ntfs-3g +fdisk +@BUSYBOX_CONFIG_FUSER
   TITLE:= Auto mount the usb disk.
 endef
 
