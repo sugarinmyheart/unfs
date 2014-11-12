@@ -21,6 +21,7 @@ plugin_Author=
 plugin_Largeicon=
 plugin_Smallicon=
 plugin_type=
+plugin_Autorun=0
 default_Largeicon="/opt/app/defalut/icon/large.png"
 default_Smallicon="/opt/app/defalut/icon/small.png"
 
@@ -202,6 +203,14 @@ fpkg_install_xcloud_package()
 			value=`echo ${value#plugin_Smallicon} | tr -d " " | tr -d ":"`
 			plugin_Smallicon=$value
 		fi
+
+		#plugin_Autorun
+		value=`echo $line | grep plugin_Autorun`
+		if [ "${value}x" != "x" ];then
+			value=`echo ${value#plugin_Autorun} | tr -d " " | tr -d ":"`
+			plugin_Autorun=$value
+		fi
+
 	done < ./appinfo
 	
 	#校验
@@ -263,6 +272,7 @@ fpkg_save_config()
 	uci set fpkg.${config_plugin_name}.plugin_Largeicon=${plugin_Largeicon}
 	uci set fpkg.${config_plugin_name}.plugin_Smallicon=${plugin_Smallicon}
 	uci set fpkg.${config_plugin_name}.plugin_Type=${plugin_type}
+	uci set fpkg.${config_plugin_name}.plugin_Autorun=${plugin_Autorun}
 	uci commit
 }
 

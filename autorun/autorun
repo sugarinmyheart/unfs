@@ -1,0 +1,29 @@
+#!/bin/sh /etc/rc.common
+# (C) 2008 openwrt.org
+
+START=100
+
+
+load_fpkg_config() {
+        local plugin_name=
+        local plugin_autorun=
+        local plugin_type=
+        for line in $(uci show fpkg | grep "=globals")
+        do
+                plugin_name=${line%=globals}
+                plugin_autorun=`echo $(uci get $plugin_name".plugin_Autorun") | tr -d " " | tr -d "0"`
+                plugin_type=$(uci get $plugin_name".plugin_Type")
+                if [ ! -z $plugin_autorun ];then
+                        #xcloud plugin
+                        if [ ${plugin_type}"x" == "xcloudx" ];then
+                                echo $plugin_name >> /tmp/autorun
+                                sh $(uci get $plugin_name".plugin_IntallPath")"appshell" start >> /tmp/autorun
+                        fi
+                fi
+        done
+
+}
+
+start() {                                                
+        load_fpkg_config                                                                    
+}  
