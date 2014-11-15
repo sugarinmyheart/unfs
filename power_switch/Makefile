@@ -42,7 +42,6 @@ endef
 
 define Package/power_switch/install
 	$(INSTALL_DIR) $(1)/usr/bin
-	$(INSTALL_DIR) $(1)/etc/init.d/
 	$(INSTALL_BIN) $(PKG_BUILD_DIR)/power_switch $(1)/usr/bin
 	$(INSTALL_BIN) ./files/switch.sh $(1)/usr/bin
 endef

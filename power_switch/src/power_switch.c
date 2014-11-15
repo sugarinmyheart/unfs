@@ -5,7 +5,7 @@
 #include <sys/wait.h>
 #include "linux/autoconf.h"
 #include "ralink_gpio.h"
-#define CONTROLPOWER 7 /*gpio#7*/
+#define CONTROLPOWER 32 /*DV gpio#32*/
 
 int gFd;
 static void ResetSigHandler(int signum)
@@ -56,7 +56,7 @@ static void InitGpio()
 		goto ioctl_err;
 	//register my information
 	info.pid = getpid();
-	info.irq = 18;/*gpio#7 Interrupt number*/
+	info.irq = 3;/*SDA(I2C)_gpio#3 Interrupt number*/
 	if (ioctl(gFd, RALINK_GPIO_REG_IRQ, &info) < 0)
 		goto ioctl_err;
 
