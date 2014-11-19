@@ -8,6 +8,7 @@ config_file="/etc/config/fpkg"
 application_unzip_tmp_path="/tmp/fpkg/"
 list_path=${application_path}"fpkg.list"
 lock_file="/tmp/fpkg.lock"
+usbmount="/tmp/usbmounted"
 
 #插件相关信息
 plugin_ID=
@@ -22,8 +23,11 @@ plugin_Largeicon=
 plugin_Smallicon=
 plugin_type=
 plugin_Autorun=0
-default_Largeicon="/opt/app/defalut/icon/large.png"
-default_Smallicon="/opt/app/defalut/icon/small.png"
+plugin_Position=
+default_Largeicon="/opt/app/icon/large.png"
+default_Smallicon="/opt/app/icon/small.png"
+icon_Collection="/opt/app/icon/"
+
 
 
 #检查参数是否正确
@@ -122,6 +126,41 @@ fpkg_install_openwrt_package()
 	rm ${application_unzip_tmp_path}/* -rf
 }
 
+#get a file md5 value
+fpkg_get_md5()
+{
+    echo `ls $1 | xargs md5sum | awk -F " " '{print $1}'`
+}
+
+#get udisk real path
+fpkg_udisk_name_to_path()
+{
+    local path=$*
+    local udisk
+    if [ "${path}x" == "Internal Storagex" ];then
+        echo "/opt/app"
+    fi
+    if [ -f ${usbmount} ];then
+        udisk=`cat "${usbmount}" | grep "${path}" |  awk -F "//" '{print $1}'`
+
+        if [ ! -z "$udisk" ];then
+            echo "/mnt/"${udisk}
+        fi
+    fi
+
+}
+
+#change install path\
+# $1 new path
+fpkg_change_install_path()
+{
+    local old_path="\/opt"
+    local new_path=$1
+    new_path=`echo $new_path | sed 's#\/#\\\/#g'`
+    eval sed 's/${old_path}/${new_path}/g' ./appshell > ./appshellbk
+    mv ./appshellbk ./appshell
+}
+
 #安装如意云插件
 fpkg_install_xcloud_package()
 {
@@ -174,6 +213,7 @@ fpkg_install_xcloud_package()
 		if [ "${value}x" != "x" ];then
 			value=`echo ${value#plugin_IntallPath} | tr -d " " | tr -d ":"`
 			plugin_IntallPath=$value
+            
 		fi
 
 		#plugin_Author
@@ -220,6 +260,11 @@ fpkg_install_xcloud_package()
 		exit 1
 	fi
 
+	plugin_Position=`uci get fpkg.install_path.name`
+    # Replace install Script
+    local plugin_install_path=`fpkg_udisk_name_to_path ${plugin_Position}`
+    fpkg_change_install_path  ${plugin_install_path}   
+
 	#执行安装脚本
 	fpkg_check_config 
 	local rv=`sh ./appshell install`
@@ -240,6 +285,11 @@ fpkg_install_xcloud_package()
 		plugin_Smallicon=${default_Smallicon}
 	fi	
 
+    # Replace install Script
+    local plugin_install_path=`fpkg_udisk_name_to_path ${plugin_Position}`
+    cd ${plugin_install_path}${plugin_IntallPath#*opt}
+    fpkg_change_install_path  ${plugin_install_path}   
+
 	#保存配置
 	fpkg_save_config
 	
@@ -258,10 +308,35 @@ fpkg_check_config()
 	fi
 }
 
+#get file name extension
+fpkg_get_file_extension()
+{
+    filename=$(basename "$1")
+    extension="${filename##*.}"
+    echo ${extension}
+}
+
 #保存配置文件
 fpkg_save_config()
 {
 	local config_plugin_name=`basename ${parameter_second} | awk -F "." '{print $1}'`
+
+    #copy the icon to the inst Internal Storage
+    local small_icon_new_name
+    local large_icon_new_name
+    if [ ${plugin_Largeicon}"x" != ${default_Largeicon}"x" ];then
+        local md5=`fpkg_get_md5 ${plugin_Largeicon}`
+        local extension=`fpkg_get_file_extension ${plugin_Largeicon}`
+        large_icon_new_name=${icon_Collection}.${md5}.${extension}
+        cp ${plugin_Largeicon} ${large_icon_new_name}
+    fi
+    if [ ${plugin_Smallicon}"x" != ${default_Smallicon}"x" ];then
+        local md5=`fpkg_get_md5 ${plugin_Smallicon}`
+        local extension=`fpkg_get_file_extension ${plugin_Smallicon}`
+        small_icon_new_name=${icon_Collection}.${md5}.${extension}
+        cp ${plugin_Smallicon} ${small_icon_new_name}
+    fi
+
 	uci set fpkg.${config_plugin_name}=globals
 	uci set fpkg.${config_plugin_name}.plugin_ID=${plugin_ID}
 	uci set fpkg.${config_plugin_name}.plugin_Name=${plugin_Name}
@@ -269,10 +344,11 @@ fpkg_save_config()
 	uci set fpkg.${config_plugin_name}.plugin_VersionCode=${plugin_VersionCode}
 	uci set fpkg.${config_plugin_name}.plugin_IntallPath=${plugin_IntallPath}
 	uci set fpkg.${config_plugin_name}.plugin_Author=${plugin_Author}
-	uci set fpkg.${config_plugin_name}.plugin_Largeicon=${plugin_Largeicon}
-	uci set fpkg.${config_plugin_name}.plugin_Smallicon=${plugin_Smallicon}
+	uci set fpkg.${config_plugin_name}.plugin_Largeicon=${large_icon_new_name}
+	uci set fpkg.${config_plugin_name}.plugin_Smallicon=${small_icon_new_name}
 	uci set fpkg.${config_plugin_name}.plugin_Type=${plugin_type}
 	uci set fpkg.${config_plugin_name}.plugin_Autorun=${plugin_Autorun}
+	uci set fpkg.${config_plugin_name}.plugin_Position="${plugin_Position}"
 	uci commit
 }
 
@@ -304,8 +380,10 @@ fpkg_remove()
 	local plugin=`basename ${parameter_second} | awk -F "." '{print $1}'`
 	local type=`uci get fpkg.${plugin}.plugin_Type`	
 	if [ "${type}x" == "xcloudx" ];then
-		local plugin_IntallPath=`uci get fpkg.${plugin}.plugin_IntallPath`
+        set -x
+        local plugin_IntallPath=`/usr/local/firefly-api/get_app_install_path $plugin`
 		sh ${plugin_IntallPath}appshell uninstall
+        set +x
 	elif [ "${type}x" == "openwrtx" ];then
 		opkg remove ${plugin}
 	else

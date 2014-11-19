@@ -17,7 +17,12 @@ load_fpkg_config() {
                         #xcloud plugin
                         if [ ${plugin_type}"x" == "xcloudx" ];then
                                 echo $plugin_name >> /tmp/autorun
-                                sh $(uci get $plugin_name".plugin_IntallPath")"appshell" start >> /tmp/autorun
+                                local real_path=`/usr/local/firefly-api/get_app_install_path $plugin_name`
+                                if [ -z "$real_path" ];then
+                                    sh $real_path"appshell" start >> /tmp/autorun
+                                else
+                                    echo "not installed ">> /tmp/autorun
+                                fi
                         fi
                 fi
         done
