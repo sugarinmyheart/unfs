@@ -322,8 +322,8 @@ fpkg_save_config()
 	local config_plugin_name=`basename ${parameter_second} | awk -F "." '{print $1}'`
 
     #copy the icon to the inst Internal Storage
-    local small_icon_new_name
-    local large_icon_new_name
+    local small_icon_new_name=${default_Largeicon}
+    local large_icon_new_name=${default_Smallicon}
     if [ ${plugin_Largeicon}"x" != ${default_Largeicon}"x" ];then
         local md5=`fpkg_get_md5 ${plugin_Largeicon}`
         local extension=`fpkg_get_file_extension ${plugin_Largeicon}`
