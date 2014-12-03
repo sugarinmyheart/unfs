@@ -43,7 +43,7 @@ udisk=`cat "${usbmount}" | grep "${path}" |  awk -F "//" '{print $1}'`
 if [ -z "$udisk" ];then
     exit 3
 else
-    echo "/mnt/"${udisk}${subpath#*opt}
+    echo -e "/mnt/"${udisk}${subpath#*opt}"\c"
     exit 0
 fi
 

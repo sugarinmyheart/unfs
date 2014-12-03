@@ -138,7 +138,7 @@ fpkg_udisk_name_to_path()
     local path=$*
     local udisk
     if [ "${path}x" == "Internal Storagex" ];then
-        echo "/opt/app"
+        echo "/opt"
     fi
     if [ -f ${usbmount} ];then
         udisk=`cat "${usbmount}" | grep "${path}" |  awk -F "//" '{print $1}'`
@@ -278,6 +278,9 @@ fpkg_install_xcloud_package()
 		fi
 	fi
 
+    plugin_Largeicon=${plugin_install_path}${plugin_Largeicon#*opt}
+    plugin_Smallicon=${plugin_install_path}${plugin_Smallicon#*opt}
+
 	if [ ! -f "${plugin_Largeicon}" ];then
 		plugin_Largeicon=${default_Largeicon}
 	fi
@@ -285,8 +288,7 @@ fpkg_install_xcloud_package()
 		plugin_Smallicon=${default_Smallicon}
 	fi	
 
-    # Replace install Script
-    local plugin_install_path=`fpkg_udisk_name_to_path ${plugin_Position}`
+    # Replace install Script Again
     cd ${plugin_install_path}${plugin_IntallPath#*opt}
     fpkg_change_install_path  ${plugin_install_path}   
 
@@ -327,13 +329,13 @@ fpkg_save_config()
     if [ ${plugin_Largeicon}"x" != ${default_Largeicon}"x" ];then
         local md5=`fpkg_get_md5 ${plugin_Largeicon}`
         local extension=`fpkg_get_file_extension ${plugin_Largeicon}`
-        large_icon_new_name=${icon_Collection}.${md5}.${extension}
+        large_icon_new_name=${icon_Collection}${md5}"."${extension}
         cp ${plugin_Largeicon} ${large_icon_new_name}
     fi
     if [ ${plugin_Smallicon}"x" != ${default_Smallicon}"x" ];then
         local md5=`fpkg_get_md5 ${plugin_Smallicon}`
         local extension=`fpkg_get_file_extension ${plugin_Smallicon}`
-        small_icon_new_name=${icon_Collection}.${md5}.${extension}
+        small_icon_new_name=${icon_Collection}${md5}"."${extension}
         cp ${plugin_Smallicon} ${small_icon_new_name}
     fi
 

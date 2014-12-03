@@ -1,5 +1,5 @@
 
 config interface 'install_path'
-        option name 'Internal storage'
+        option name 'Internal Storage'
         option path '' 
 

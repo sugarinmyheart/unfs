@@ -55,8 +55,9 @@ function read_install_package_list()
                     local index = ""
                     --xcloud
                     if section.plugin_Type == "xcloud" then
-                        if fs.isfile(section.plugin_IntallPath.."/html/index.htm") then
-                            index="/cgi-bin/luci/xcloud/comskip?page="..section.plugin_IntallPath.."/html/index.htm"
+                        local install_path = luci.sys.exec("/usr/local/firefly-api/get_app_install_path "..section[".name"])
+                        if fs.isfile(install_path.."/html/index.htm") then
+                            index="/cgi-bin/luci/xcloud/comskip?page="..install_path.."/html/index.htm"
 		                end
 		            end
                     rv["error"]=0
